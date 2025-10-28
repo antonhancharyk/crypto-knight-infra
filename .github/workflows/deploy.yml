@@ -52,6 +52,18 @@ jobs:
           source: "./filebeat"
           target: "./crypto-knight-infra"
 
+      - name: Fix Filebeat config permissions
+        if: ${{ github.event.inputs.service == 'filebeat' }}
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd crypto-knight-infra/${{ github.event.inputs.service }}
+            sudo chown root:root ./filebeat.yml
+            sudo chmod 644 ./filebeat.yml
+
       - name: Deploy to target
         if: env.HOST != 'all'
         uses: appleboy/ssh-action@v1.2.0

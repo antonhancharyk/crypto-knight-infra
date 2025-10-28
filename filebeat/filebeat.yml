@@ -1,0 +1,23 @@
+filebeat.inputs:
+  - type: container
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    json.message_key: log
+    json.add_error_key: true
+    json.keys_under_root: true
+    processors:
+      - add_docker_metadata: ~
+      - add_host_metadata: ~
+      - add_fields:
+          target: ''
+          fields:
+            environment: production
+      - drop_event:
+          when:
+            equals:
+              stream: "stderr"
+output.logstash:
+  hosts: ["logstash.crypto-knight.site:5044"]
+  ssl.enabled: false 
+  

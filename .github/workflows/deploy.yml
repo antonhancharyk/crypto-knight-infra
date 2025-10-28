@@ -1,0 +1,77 @@
+name: Manual Deploy Infra Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to deploy"
+        required: true
+        type: choice
+        options:
+          # - elk
+          - filebeat
+          # - prometheus
+          # - grafana
+      target:
+        description: "Target server (prod1, prod2, etc)"
+        required: true
+        type: choice
+        options:
+          - prod1
+          # - prod2
+          # - all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Select target servers
+        id: select
+        # run: |
+        #   if [ "${{ github.event.inputs.target }}" == "prod1" ]; then
+        #     echo "HOST=123.45.67.89" >> $GITHUB_ENV
+        #   elif [ "${{ github.event.inputs.target }}" == "prod2" ]; then
+        #     echo "HOST=98.76.54.32" >> $GITHUB_ENV
+        #   else
+        #     echo "HOST=all" >> $GITHUB_ENV
+        #   fi
+        run: |
+          if [ "${{ github.event.inputs.target }}" == "prod1" ]; then
+            echo "HOST=194.146.38.167" >> $GITHUB_ENV
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy artefacts
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./filebeat"
+          target: "./crypto-knight-infra"
+
+      - name: Deploy to target
+        if: env.HOST != 'all'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd crypto-knight-infra/${{ github.event.inputs.service }}
+            git pull
+            docker compose up -d --build
+
+      # - name: Deploy to all servers
+      #   if: env.HOST == 'all'
+      #   uses: appleboy/ssh-action@v1.2.0
+      #   with:
+      #     host: ${{ secrets.ALL_SERVERS }}
+      #     username: ubuntu
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: |
+      #       cd /opt/infra/${{ github.event.inputs.service }}
+      #       git pull
+      #       docker compose up -d --build

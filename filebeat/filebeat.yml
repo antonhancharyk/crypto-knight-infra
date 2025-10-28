@@ -13,10 +13,6 @@ filebeat.inputs:
           target: ''
           fields:
             environment: production
-      - drop_event:
-          when:
-            equals:
-              stream: "stderr"
 output.logstash:
   hosts: ["logstash.crypto-knight.site:5044"]
   ssl.enabled: false 

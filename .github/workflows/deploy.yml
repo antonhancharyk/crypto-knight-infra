@@ -1,5 +1,8 @@
 name: Manual Deploy Infra Service
 
+env:
+  INFRA: crypto-knight-infra
+
 on:
   workflow_dispatch:
     inputs:
@@ -8,18 +11,14 @@ on:
         required: true
         type: choice
         options:
-          # - elk
           - filebeat
-          # - prometheus
-          # - grafana
       target:
         description: "Target server (prod1, prod2, etc)"
         required: true
         type: choice
         options:
           - prod1
-          # - prod2
-          # - all
+          - prod2
 
 jobs:
   deploy:
@@ -27,17 +26,11 @@ jobs:
     steps:
       - name: Select target servers
         id: select
-        # run: |
-        #   if [ "${{ github.event.inputs.target }}" == "prod1" ]; then
-        #     echo "HOST=123.45.67.89" >> $GITHUB_ENV
-        #   elif [ "${{ github.event.inputs.target }}" == "prod2" ]; then
-        #     echo "HOST=98.76.54.32" >> $GITHUB_ENV
-        #   else
-        #     echo "HOST=all" >> $GITHUB_ENV
-        #   fi
         run: |
           if [ "${{ github.event.inputs.target }}" == "prod1" ]; then
             echo "HOST=194.146.38.167" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.target }}" == "prod2" ]; then
+            echo "HOST=113.30.189.245" >> $GITHUB_ENV  
           fi
 
       - name: Checkout repository
@@ -49,8 +42,8 @@ jobs:
           host: ${{ env.HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./filebeat"
-          target: "./crypto-knight-infra"
+          source: "./${{ github.event.inputs.service }}"
+          target: ./${{ env.INFRA }}
 
       - name: Fix Filebeat config permissions
         if: ${{ github.event.inputs.service == 'filebeat' }}
@@ -60,30 +53,17 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd crypto-knight-infra/${{ github.event.inputs.service }}
+            cd ./${{ env.INFRA }}/${{ github.event.inputs.service }}
             sudo chown root:root ./filebeat.yml
             sudo chmod 644 ./filebeat.yml
 
       - name: Deploy to target
-        if: env.HOST != 'all'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ env.HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd crypto-knight-infra/${{ github.event.inputs.service }}
+            cd ./${{ env.INFRA }}/${{ github.event.inputs.service }}
             git pull
-            docker compose up -d --build
-
-      # - name: Deploy to all servers
-      #   if: env.HOST == 'all'
-      #   uses: appleboy/ssh-action@v1.2.0
-      #   with:
-      #     host: ${{ secrets.ALL_SERVERS }}
-      #     username: ubuntu
-      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
-      #     script: |
-      #       cd /opt/infra/${{ github.event.inputs.service }}
-      #       git pull
-      #       docker compose up -d --build
+            docker compose up -d

@@ -3,7 +3,6 @@ filebeat.inputs:
     enabled: true
     paths:
       - /var/lib/docker/containers/*/*.log
-    json.message_key: log
     json.add_error_key: true
     json.keys_under_root: true
     processors:

@@ -7,16 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: "Service to deploy"
-        required: true
         type: choice
         options:
-          - filebeat
-          - observability
           - rabbitmq
-      target:
-        description: "Target server (prod1, prod2, etc)"
-        required: true
+          - observability
+          - filebeat
+      role:
         type: choice
         options:
           - prod1
@@ -27,16 +23,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Select target servers
+      - name: Select servers
         id: select
         run: |
-          if [ "${{ github.event.inputs.target }}" == "prod1" ]; then
+          if [ "${{ github.event.inputs.role }}" == "prod1" ]; then
             echo "HOST=194.146.38.167" >> $GITHUB_ENV
-          elif [ "${{ github.event.inputs.target }}" == "prod2" ]; then
+          elif [ "${{ github.event.inputs.role }}" == "prod2" ]; then
             echo "HOST=113.30.189.245" >> $GITHUB_ENV  
-          elif [ "${{ github.event.inputs.target }}" == "infra" ]; then
+          elif [ "${{ github.event.inputs.role }}" == "infra" ]; then
             echo "HOST=5.180.182.201" >> $GITHUB_ENV  
-          elif [ "${{ github.event.inputs.target }}" == "infra" ]; then
+          elif [ "${{ github.event.inputs.role }}" == "infra" ]; then
             echo "HOST=5.180.182.201" >> $GITHUB_ENV  
           fi
 
@@ -52,7 +48,7 @@ jobs:
           source: "./${{ github.event.inputs.service }}"
           target: ./${{ env.INFRA }}
 
-      - name: Fix Filebeat config permissions
+      - name: Fix filebeat config permissions
         if: ${{ github.event.inputs.service == 'filebeat' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -64,7 +60,7 @@ jobs:
             sudo chown root:root ./filebeat.yml
             sudo chmod 644 ./filebeat.yml
 
-      - name: Deploy to target
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ env.HOST }}

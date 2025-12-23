@@ -7,12 +7,14 @@ on:
   workflow_dispatch:
     inputs:
       service:
+        description: "Service"
         type: choice
         options:
           - rabbitmq
           - observability
           - filebeat
       role:
+        description: "Role"
         type: choice
         options:
           - prod1

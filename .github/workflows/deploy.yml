@@ -21,8 +21,7 @@ on:
         options:
           - prod1
           - prod2
-          - observability
-          - rabbitmq
+          - infra
 
 jobs:
   deploy:
@@ -35,9 +34,9 @@ jobs:
             echo "HOST=194.146.38.167" >> $GITHUB_ENV
           elif [ "${{ github.event.inputs.target }}" == "prod2" ]; then
             echo "HOST=113.30.189.245" >> $GITHUB_ENV  
-          elif [ "${{ github.event.inputs.target }}" == "observability" ]; then
+          elif [ "${{ github.event.inputs.target }}" == "infra" ]; then
             echo "HOST=5.180.182.201" >> $GITHUB_ENV  
-          elif [ "${{ github.event.inputs.target }}" == "rabbitmq" ]; then
+          elif [ "${{ github.event.inputs.target }}" == "infra" ]; then
             echo "HOST=5.180.182.201" >> $GITHUB_ENV  
           fi
 

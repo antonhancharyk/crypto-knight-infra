@@ -13,6 +13,7 @@ on:
         options:
           - filebeat
           - observability
+          - rabbitmq
       target:
         description: "Target server (prod1, prod2, etc)"
         required: true
@@ -21,6 +22,7 @@ on:
           - prod1
           - prod2
           - observability
+          - rabbitmq
 
 jobs:
   deploy:
@@ -34,6 +36,8 @@ jobs:
           elif [ "${{ github.event.inputs.target }}" == "prod2" ]; then
             echo "HOST=113.30.189.245" >> $GITHUB_ENV  
           elif [ "${{ github.event.inputs.target }}" == "observability" ]; then
+            echo "HOST=5.180.182.201" >> $GITHUB_ENV  
+          elif [ "${{ github.event.inputs.target }}" == "rabbitmq" ]; then
             echo "HOST=5.180.182.201" >> $GITHUB_ENV  
           fi
 

@@ -11,6 +11,6 @@ services:
       RABBITMQ_DEFAULT_USER: crypto
       RABBITMQ_DEFAULT_PASS: crypto
     volumes:
-      - crypto-knight-infra-rabbitmq:/var/lib/rabbitmq
+      - crypto-knight-infra-rabbitmq_data:/var/lib/rabbitmq
 volumes:
   crypto-knight-infra-rabbitmq_data:

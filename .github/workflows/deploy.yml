@@ -13,6 +13,7 @@ on:
           - rabbitmq
           - observability
           - filebeat
+          - wireguard
       role:
         description: "Role"
         type: choice
@@ -20,6 +21,7 @@ on:
           - prod1
           - prod2
           - infra
+          - front
 
 jobs:
   deploy:
@@ -34,6 +36,9 @@ jobs:
               ;;
             prod2)
               echo "HOST=113.30.189.245" >> $GITHUB_ENV
+              ;;
+            front)
+              echo "HOST=103.45.247.73" >> $GITHUB_ENV
               ;;
             infra)
               echo "HOST=5.180.182.201" >> $GITHUB_ENV
@@ -67,6 +72,38 @@ jobs:
             cd ./${{ env.INFRA }}/${{ github.event.inputs.service }}
             sudo chown root:root ./filebeat.yml
             sudo chmod 644 ./filebeat.yml
+
+      - name: Generate WireGuard config
+        if: ${{ github.event.inputs.service == 'wireguard' }}
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ./${{ env.INFRA }}/wireguard
+            mkdir -p config
+
+            case "${{ github.event.inputs.role }}" in
+              infra)
+                ADDRESS="10.10.0.1/24"
+                PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD1 }}"
+                PEERS=$(cat prod1.peers | \
+                  sed "s|{{WG_PUBKEY_PROD2}}|${{ secrets.WG_PUBKEY_PROD2 }}|g")
+                ;;
+              front)
+                ADDRESS="10.10.0.2/24"
+                PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD2 }}"
+                PEERS=$(cat prod2.peers | \
+                  sed "s|{{WG_PUBKEY_PROD1}}|${{ secrets.WG_PUBKEY_PROD1 }}|g")
+                ;;
+            esac
+
+            cat wg0.conf \
+              | sed "s|{{ADDRESS}}|$ADDRESS|g" \
+              | sed "s|{{PRIVATE_KEY}}|$PRIVATE_KEY|g" \
+              | sed "s|{{PEERS}}|$PEERS|g" \
+              > config/wg0.conf
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0

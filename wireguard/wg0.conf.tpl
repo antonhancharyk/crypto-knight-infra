@@ -1,0 +1,6 @@
+[Interface]
+Address = ${ADDRESS}
+ListenPort = 51820
+PrivateKey = ${PRIVATE_KEY}
+
+${PEERS}

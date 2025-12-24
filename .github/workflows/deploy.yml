@@ -86,24 +86,21 @@ jobs:
 
             case "${{ github.event.inputs.role }}" in
               infra)
-                ADDRESS="10.10.0.1/24"
-                PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD1 }}"
+                export ADDRESS="10.10.0.1/24"
+                export PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD1 }}"
                 export WG_PUBKEY_PROD2="${{ secrets.WG_PUBKEY_PROD2 }}"
-                PEERS=$(cat prod1.peers | sed "s|{{WG_PUBKEY_PROD2}}|$WG_PUBKEY_PROD2|g")
+                PEERS=$(envsubst < prod1.peers.tpl)
                 ;;
               front)
-                ADDRESS="10.10.0.2/24"
-                PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD2 }}"
+                export ADDRESS="10.10.0.2/24"
+                export PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD2 }}"
                 export WG_PUBKEY_PROD1="${{ secrets.WG_PUBKEY_PROD1 }}"
-                PEERS=$(cat prod2.peers | sed "s|{{WG_PUBKEY_PROD1}}|$WG_PUBKEY_PROD1|g")
+                PEERS=$(envsubst < prod2.peers.tpl)
                 ;;
             esac
 
-            cat wg0.conf \
-              | sed "s|{{ADDRESS}}|$ADDRESS|g" \
-              | sed "s|{{PRIVATE_KEY}}|$PRIVATE_KEY|g" \
-              | sed "s|{{PEERS}}|$PEERS|g" \
-              > config/wg0.conf
+            export PEERS="$PEERS"
+            envsubst < wg0.conf.tpl > config/wg0.conf
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0

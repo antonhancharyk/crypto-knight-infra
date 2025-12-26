@@ -18,10 +18,9 @@ on:
         description: "Role"
         type: choice
         options:
-          - prod1
-          - prod2
-          - infra
-          - front
+          - crypto-knight-trading-bot
+          - elk-metrics-rabbitmq-api
+          - gateway-front-tgbot-sso
 
 jobs:
   deploy:
@@ -31,16 +30,13 @@ jobs:
         id: select
         run: |
           case "${{ github.event.inputs.role }}" in
-            prod1)
-              echo "HOST=194.146.38.167" >> $GITHUB_ENV
-              ;;
-            prod2)
+            crypto-knight-trading-bot)
               echo "HOST=113.30.189.245" >> $GITHUB_ENV
               ;;
-            front)
+            gateway-front-tgbot-sso)
               echo "HOST=103.45.247.73" >> $GITHUB_ENV
               ;;
-            infra)
+            elk-metrics-rabbitmq-api)
               echo "HOST=5.180.182.201" >> $GITHUB_ENV
               ;;
             *)

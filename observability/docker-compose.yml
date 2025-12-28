@@ -1,5 +1,4 @@
-version: "3.7"
-
+version: "3.9"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
@@ -20,7 +19,6 @@ services:
     expose:
       - "9200"
     restart: always
-
   logstash:
     image: docker.elastic.co/logstash/logstash:8.13.4
     container_name: crypto-knight-infra-observability-logstash
@@ -31,7 +29,6 @@ services:
     restart: always
     ports:
       - "5044:5044"
-
   kibana:
     image: docker.elastic.co/kibana/kibana:8.13.4
     container_name: crypto-knight-infra-observability-kibana
@@ -42,7 +39,6 @@ services:
     expose:
       - "5601"
     restart: always
-
   prometheus:
     image: prom/prometheus
     container_name: crypto-knight-infra-observability-prometheus
@@ -52,7 +48,6 @@ services:
     expose:
       - "9090"
     restart: always
-
   grafana:
     image: grafana/grafana
     container_name: crypto-knight-infra-observability-grafana
@@ -63,23 +58,6 @@ services:
     depends_on:
       - prometheus
     restart: always
-
-  # nginx:
-  #   container_name: crypto-knight-infra-observability-nginx
-  #   image: nginx:alpine
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #   depends_on:
-  #     grafana:
-  #       condition: service_started
-  #     kibana:
-  #       condition: service_started
-  #     prometheus:
-  #       condition: service_started
-  #   restart: always
-
 volumes:
   prometheus-data:
   grafana-data:

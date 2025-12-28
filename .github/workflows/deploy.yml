@@ -13,7 +13,6 @@ on:
           - rabbitmq
           - observability
           - filebeat
-          - wireguard
       role:
         description: "Role"
         type: choice
@@ -68,44 +67,6 @@ jobs:
             cd ./${{ env.INFRA }}/${{ github.event.inputs.service }}
             sudo chown root:root ./filebeat.yml
             sudo chmod 644 ./filebeat.yml
-
-      - name: Generate WireGuard config
-        if: ${{ github.event.inputs.service == 'wireguard' }}
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ env.HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ./${{ env.INFRA }}/wireguard
-            mkdir -p config
-
-            case "${{ github.event.inputs.role }}" in
-              prod1)
-                export ADDRESS="10.10.0.1/24"
-                export PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD1 }}"
-                export WG_PUBKEY_PROD2="${{ secrets.WG_PUBKEY_PROD2 }}"
-                export WG_PUBKEY_PROD3="${{ secrets.WG_PUBKEY_PROD3 }}"
-                PEERS=$(envsubst < prod1.peers.tpl)
-                ;;
-              prod2)
-                export ADDRESS="10.10.0.2/24"
-                export PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD2 }}"
-                export WG_PUBKEY_PROD1="${{ secrets.WG_PUBKEY_PROD1 }}"
-                export WG_PUBKEY_PROD3="${{ secrets.WG_PUBKEY_PROD3 }}"
-                PEERS=$(envsubst < prod2.peers.tpl)
-                ;;
-              prod3)
-                export ADDRESS="10.10.0.3/24"
-                export PRIVATE_KEY="${{ secrets.WG_PRIVKEY_PROD3 }}"
-                export WG_PUBKEY_PROD1="${{ secrets.WG_PUBKEY_PROD1 }}"
-                export WG_PUBKEY_PROD2="${{ secrets.WG_PUBKEY_PROD2 }}"
-                PEERS=$(envsubst < prod3.peers.tpl)
-                ;;
-            esac
-
-            export PEERS="$PEERS"
-            envsubst < wg0.conf.tpl > config/wg0.conf
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.0

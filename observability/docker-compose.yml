@@ -18,7 +18,7 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/data
     restart: always
     ports:
-      - "9200:9200"
+      - "10.10.0.3:9200:9200"
   logstash:
     image: docker.elastic.co/logstash/logstash:8.13.4
     container_name: crypto-knight-infra-observability-logstash
@@ -28,7 +28,7 @@ services:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     restart: always
     ports:
-      - "5044:5044"
+      - "10.10.0.3:5044:5044"
   kibana:
     image: docker.elastic.co/kibana/kibana:8.13.4
     container_name: crypto-knight-infra-observability-kibana
@@ -38,7 +38,7 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     restart: always
     ports:
-      - "5601:5601"
+      - "10.10.0.3:5601:5601"
   prometheus:
     image: prom/prometheus
     container_name: crypto-knight-infra-observability-prometheus
@@ -47,7 +47,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     restart: always
     ports:
-      - "9090:9090"
+      - "10.10.0.3:9090:9090"
   grafana:
     image: grafana/grafana
     container_name: crypto-knight-infra-observability-grafana
@@ -57,7 +57,7 @@ services:
       - prometheus
     restart: always
     ports:
-      - "3000:3000"
+      - "10.10.0.3:3000:3000"
 volumes:
   prometheus_data:
   grafana_data:

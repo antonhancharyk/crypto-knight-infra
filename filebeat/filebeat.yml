@@ -13,6 +13,6 @@ filebeat.inputs:
           fields:
             environment: production
 output.logstash:
-  hosts: ["logstash.crypto-knight.site:5044"]
+  hosts: ["10.10.0.3:5044"]
   ssl.enabled: false 
   

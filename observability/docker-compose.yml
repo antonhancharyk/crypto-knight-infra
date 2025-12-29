@@ -15,9 +15,7 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    expose:
-      - "9200"
+      - elasticsearch_data:/usr/share/elasticsearch/data
     restart: always
   logstash:
     image: docker.elastic.co/logstash/logstash:8.13.4
@@ -27,8 +25,6 @@ services:
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     restart: always
-    ports:
-      - "5044:5044"
   kibana:
     image: docker.elastic.co/kibana/kibana:8.13.4
     container_name: crypto-knight-infra-observability-kibana
@@ -36,29 +32,23 @@ services:
       - elasticsearch
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    expose:
-      - "5601"
     restart: always
   prometheus:
     image: prom/prometheus
     container_name: crypto-knight-infra-observability-prometheus
     volumes:
-      - prometheus-data:/prometheus
+      - prometheus_data:/prometheus
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    expose:
-      - "9090"
     restart: always
   grafana:
     image: grafana/grafana
     container_name: crypto-knight-infra-observability-grafana
     volumes:
-      - grafana-data:/var/lib/grafana
-    expose:
-      - "3000"
+      - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
     restart: always
 volumes:
-  prometheus-data:
-  grafana-data:
-  elasticsearch-data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:

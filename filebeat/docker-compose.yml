@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 services:
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.15.0

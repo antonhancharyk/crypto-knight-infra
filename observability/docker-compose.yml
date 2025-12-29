@@ -36,6 +36,9 @@ services:
       - elasticsearch
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_PUBLICBASEURL=https://kibana.crypto-knight.site
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=5601
     restart: always
     ports:
       - "10.10.0.3:5601:5601"

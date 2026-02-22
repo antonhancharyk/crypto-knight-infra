@@ -68,7 +68,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ./${{ env.INFRA }}/${{ github.event.inputs.service }}
-            sudo chown root:root ./filebeat.yml
+            sudo chown deploy:deploy ./filebeat.yml
             sudo chmod 644 ./filebeat.yml
 
       - name: Deploy docker service

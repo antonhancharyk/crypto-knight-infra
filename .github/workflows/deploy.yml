@@ -98,6 +98,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
       ############################################################
       # BOOTSTRAP (root)

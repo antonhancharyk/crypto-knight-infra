@@ -24,3 +24,10 @@
     owner: "{{ deploy_user }}"
     group: "{{ deploy_user }}"
     mode: "0600"
+
+- name: Allow deploy to sudo without password (limited)
+  copy:
+    dest: /etc/sudoers.d/{{ deploy_user }}
+    content: "{{ deploy_user }} ALL=(ALL) NOPASSWD: /bin/chown, /bin/chmod"
+    mode: "0440"
+    validate: "visudo -cf %s"

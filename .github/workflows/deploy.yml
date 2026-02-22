@@ -21,6 +21,10 @@ on:
           - crypto-bot
           - prod2
           - prod3
+      bootstrap:
+        description: "Run bootstrap playbook"
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -104,7 +108,7 @@ jobs:
       # BOOTSTRAP (root)
       ############################################################
       - name: Create bootstrap inventory
-        if: ${{ github.event.inputs.service == 'ansible' }}
+        if: ${{ github.event.inputs.service == 'ansible' && github.event.inputs.bootstrap == true }}
         run: |
           mkdir -p ansible/.ci
           cat <<EOF > ansible/.ci/bootstrap.ini

@@ -1,0 +1,38 @@
+- name: Bootstrap new server
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Create ansible user
+      user:
+        name: "{{ admin_user }}"
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Ensure .ssh directory exists
+      file:
+        path: /home/{{ admin_user }}/.ssh
+        state: directory
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: "0700"
+
+    - name: Add SSH key
+      authorized_key:
+        user: "{{ admin_user }}"
+        key: "{{ ansible_ssh_public_key_file }}"
+
+    - name: Ensure authorized_keys permissions
+      file:
+        path: /home/{{ admin_user }}/.ssh/authorized_keys
+        state: file
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: "0600"
+
+    - name: Allow ansible sudo without password
+      copy:
+        dest: /etc/sudoers.d/{{ admin_user }}
+        content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL"
+        mode: "0440"
+        validate: 'visudo -cf %s'

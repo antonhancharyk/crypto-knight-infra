@@ -1,0 +1,24 @@
+- name: Update apt cache
+  apt:
+    update_cache: true
+    cache_valid_time: 86400
+
+- name: Upgrade system packages
+  apt:
+    upgrade: dist
+
+- name: Install base packages
+  apt:
+    name:
+      - git
+      - curl
+      - htop
+      - vim
+      - jq
+      - net-tools
+      - unattended-upgrades
+      - logrotate
+    state: present
+
+- name: Enable unattended upgrades
+  command: dpkg-reconfigure -f noninteractive unattended-upgrades

@@ -1,0 +1,2 @@
+ansible_user: root
+admin_user: ansible

@@ -13,11 +13,12 @@ on:
           - rabbitmq
           - observability
           - filebeat
+          - ansible
       role:
         description: "Role"
         type: choice
         options:
-          - prod1
+          - crypto-bot
           - prod2
           - prod3
 
@@ -26,10 +27,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Select server
-        id: select
         run: |
           case "${{ github.event.inputs.role }}" in
-            prod1)
+            crypto-bot)
               echo "HOST=113.30.189.245" >> $GITHUB_ENV
               ;;
             prod2)
@@ -43,11 +43,14 @@ jobs:
               exit 1
               ;;
           esac
-
+      ############################################################
+      # NORMAL DOCKER DEPLOY
+      ############################################################
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Copy artefacts
+        if: ${{ github.event.inputs.service != 'ansible' }}
         uses: appleboy/scp-action@master
         with:
           host: ${{ env.HOST }}
@@ -68,7 +71,8 @@ jobs:
             sudo chown root:root ./filebeat.yml
             sudo chmod 644 ./filebeat.yml
 
-      - name: Deploy to server
+      - name: Deploy docker service
+        if: ${{ github.event.inputs.service != 'ansible' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ env.HOST }}
@@ -79,3 +83,52 @@ jobs:
             docker compose pull
             docker compose down --remove-orphans
             docker compose up -d
+      ############################################################
+      # ANSIBLE DEPLOY
+      ############################################################
+      - name: Install Ansible
+        if: ${{ github.event.inputs.service == 'ansible' }}
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Setup SSH key for Ansible
+        if: ${{ github.event.inputs.service == 'ansible' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+      ############################################################
+      # BOOTSTRAP (root)
+      ############################################################
+      - name: Create bootstrap inventory
+        if: ${{ github.event.inputs.service == 'ansible' }}
+        run: |
+          mkdir -p ansible/.ci
+          cat <<EOF > ansible/.ci/bootstrap.ini
+          [bootstrap]
+          $HOST ansible_user=root ansible_ssh_private_key_file=~/.ssh/deploy_key ansible_python_interpreter=/usr/bin/python3
+          EOF
+
+      - name: Run Bootstrap
+        if: ${{ github.event.inputs.service == 'ansible' }}
+        run: |
+          cd ansible
+          ansible-playbook -i .ci/bootstrap.ini bootstrap.yml
+      ############################################################
+      # MAIN PLAYBOOK (ansible user)
+      ############################################################
+      - name: Create main inventory
+        if: ${{ github.event.inputs.service == 'ansible' }}
+        run: |
+          cat <<EOF > ansible/.ci/main.ini
+          [servers]
+          $HOST ansible_user=ansible ansible_ssh_private_key_file=~/.ssh/deploy_key ansible_python_interpreter=/usr/bin/python3
+          EOF
+
+      - name: Run Main Playbook
+        if: ${{ github.event.inputs.service == 'ansible' }}
+        run: |
+          cd ansible
+          ansible-playbook -i .ci/main.ini playbook.yml

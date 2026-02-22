@@ -1,0 +1,26 @@
+- name: Create deploy user
+  user:
+    name: "{{ deploy_user }}"
+    shell: /bin/bash
+    create_home: yes
+
+- name: Ensure .ssh directory exists
+  file:
+    path: /home/{{ deploy_user }}/.ssh
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+    mode: "0700"
+
+- name: Add SSH key for deploy user
+  authorized_key:
+    user: "{{ deploy_user }}"
+    key: "{{ ansible_ssh_public_key_file }}"
+
+- name: Ensure authorized_keys permissions
+  file:
+    path: /home/{{ deploy_user }}/.ssh/authorized_keys
+    state: file
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+    mode: "0600"

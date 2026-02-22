@@ -34,7 +34,7 @@ jobs:
         run: |
           case "${{ github.event.inputs.role }}" in
             crypto-bot)
-              echo "HOST=113.30.189.245" >> $GITHUB_ENV
+              echo "HOST=193.168.173.51" >> $GITHUB_ENV
               ;;
             prod2)
               echo "HOST=103.45.247.73" >> $GITHUB_ENV

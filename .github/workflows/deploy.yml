@@ -108,7 +108,7 @@ jobs:
       # BOOTSTRAP (root)
       ############################################################
       - name: Create bootstrap inventory
-        if: ${{ github.event.inputs.service == 'ansible' && github.event.inputs.bootstrap == true }}
+        if: ${{ github.event.inputs.service == 'ansible' && github.event.inputs.bootstrap }}
         run: |
           mkdir -p ansible/.ci
           cat <<EOF > ansible/.ci/bootstrap.ini

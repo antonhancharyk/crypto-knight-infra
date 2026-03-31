@@ -1,73 +1,48 @@
 version: "3.9"
+
 services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: crypto-knight-infra-observability-elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - ELASTIC_PASSWORD=crypto
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    cap_add:
-      - IPC_LOCK
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.94.0
+    container_name: otel-collector
+    command: ["--config=/etc/otel/config.yaml"]
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    restart: always
+      - ./otel-collector-config.yaml:/etc/otel/config.yaml
     ports:
-      - "10.10.0.3:9200:9200"
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.13.4
-    container_name: crypto-knight-infra-observability-logstash
+      - "10.0.0.3:4317:4317"
     depends_on:
-      - elasticsearch
-    volumes:
-      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-    restart: always
-    ports:
-      - "10.10.0.3:5044:5044"
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.13.4
-    container_name: crypto-knight-infra-observability-kibana
-    depends_on:
-      - elasticsearch
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - SERVER_PUBLICBASEURL=https://kibana.crypto-knight.site
-      - SERVER_HOST=0.0.0.0
-      - SERVER_PORT=5601
-      - ELASTICSEARCH_USERNAME=elastic
-      - ELASTICSEARCH_PASSWORD=crypto
-    restart: always
-    ports:
-      - "10.10.0.3:5601:5601"
+      - jaeger
+      - prometheus
+      - loki
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
+    expose:
+      - "16686"
+
   prometheus:
-    image: prom/prometheus
-    container_name: crypto-knight-infra-observability-prometheus
+    image: prom/prometheus:v2.51.2
+    container_name: prometheus
     volumes:
-      - prometheus_data:/prometheus
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    restart: always
-    ports:
-      - "10.10.0.3:9090:9090"
+    expose:
+      - "9090"
+
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    expose:
+      - "3100"
+
   grafana:
-    image: grafana/grafana
-    container_name: crypto-knight-infra-observability-grafana
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    ports:
+      - "10.0.0.3:3000:3000"
     volumes:
-      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
-    restart: always
-    environment:
-      - GF_SECURITY_ADMIN_USER=crypto
-      - GF_SECURITY_ADMIN_PASSWORD=crypto
-    ports:
-      - "10.10.0.3:3000:3000"
-volumes:
-  prometheus_data:
-  grafana_data:
-  elasticsearch_data:
+      - loki
+      - jaeger

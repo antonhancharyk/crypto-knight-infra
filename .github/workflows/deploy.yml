@@ -12,15 +12,14 @@ on:
         options:
           - rabbitmq
           - observability
-          - filebeat
           - ansible
       role:
         description: "Role"
         type: choice
         options:
-          - crypto-bot
-          - prod2
-          - prod3
+          - bot
+          - app
+          - infra
       bootstrap:
         description: "Run bootstrap playbook"
         type: boolean
@@ -33,13 +32,13 @@ jobs:
       - name: Select server
         run: |
           case "${{ github.event.inputs.role }}" in
-            crypto-bot)
+            bot)
               echo "HOST=193.168.173.51" >> $GITHUB_ENV
               ;;
-            prod2)
+            app)
               echo "HOST=103.45.247.73" >> $GITHUB_ENV
               ;;
-            prod3)
+            infra)
               echo "HOST=5.180.182.201" >> $GITHUB_ENV
               ;;
             *)
@@ -62,18 +61,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "./${{ github.event.inputs.service }}"
           target: ./${{ env.INFRA }}
-
-      - name: Fix filebeat config permissions
-        if: ${{ github.event.inputs.service == 'filebeat' }}
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ env.HOST }}
-          username: deploy
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ./${{ env.INFRA }}/${{ github.event.inputs.service }}
-            sudo chown root:root ./filebeat.yml
-            sudo chmod 644 ./filebeat.yml
 
       - name: Deploy docker service
         if: ${{ github.event.inputs.service != 'ansible' }}

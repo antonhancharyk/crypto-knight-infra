@@ -90,38 +90,28 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keygen -y -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          for host in 193.168.173.51 103.45.247.73 5.180.182.201; do
+            ssh-keyscan -H "$host" >> ~/.ssh/known_hosts
+          done
       ############################################################
       # BOOTSTRAP (root)
       ############################################################
-      - name: Create bootstrap inventory
-        if: ${{ github.event.inputs.service == 'ansible' && github.event.inputs.bootstrap == 'true' }}
-        run: |
-          mkdir -p ansible/.ci
-          cat <<EOF > ansible/.ci/bootstrap.ini
-          [bootstrap]
-          $HOST ansible_user=root ansible_ssh_private_key_file=~/.ssh/deploy_key ansible_python_interpreter=/usr/bin/python3
-          EOF
-
       - name: Run Bootstrap
         if: ${{ github.event.inputs.service == 'ansible' && github.event.inputs.bootstrap == 'true' }}
         run: |
           cd ansible
-          ansible-playbook -i .ci/bootstrap.ini bootstrap.yml
+          ansible -i inventory_bootstrap.ini bootstrap -m ping
+          ansible-playbook -i inventory_bootstrap.ini bootstrap.yml
       ############################################################
       # MAIN PLAYBOOK (ansible user)
       ############################################################
-      - name: Create main inventory
+      - name: Check all servers are reachable
         if: ${{ github.event.inputs.service == 'ansible' }}
         run: |
-          mkdir -p ansible/.ci
-          cat <<EOF > ansible/.ci/main.ini
-          [servers]
-          $HOST ansible_user=ansible ansible_ssh_private_key_file=~/.ssh/deploy_key ansible_python_interpreter=/usr/bin/python3
-          EOF
-
+          cd ansible
+          ansible -i inventory.ini servers -m ping
       - name: Run Main Playbook
         if: ${{ github.event.inputs.service == 'ansible' }}
         run: |
           cd ansible
-          ansible-playbook -i .ci/main.ini playbook.yml
+          ansible-playbook -i inventory.ini playbook.yml

@@ -1,0 +1,98 @@
+- name: Validate WireGuard inventory
+  assert:
+    that:
+      - wireguard_address is defined
+      - hostvars[item].ansible_host is defined
+      - hostvars[item].wireguard_address is defined
+    fail_msg: "Missing WireGuard host configuration for {{ item }}"
+  loop: "{{ groups[wireguard_group] }}"
+  loop_control:
+    label: "{{ item }}"
+
+- name: Install WireGuard
+  apt:
+    name: "{{ wireguard_packages }}"
+    state: present
+
+- name: Create WireGuard config directory
+  file:
+    path: "{{ wireguard_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Generate WireGuard private key
+  shell: "umask 077 && wg genkey > {{ wireguard_private_key_file }}"
+  args:
+    creates: "{{ wireguard_private_key_file }}"
+  no_log: true
+
+- name: Generate WireGuard public key
+  shell: "wg pubkey < {{ wireguard_private_key_file }} > {{ wireguard_public_key_file }}"
+  args:
+    creates: "{{ wireguard_public_key_file }}"
+  no_log: true
+
+- name: Set WireGuard private key permissions
+  file:
+    path: "{{ wireguard_private_key_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Set WireGuard public key permissions
+  file:
+    path: "{{ wireguard_public_key_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Read WireGuard private key
+  slurp:
+    src: "{{ wireguard_private_key_file }}"
+  register: wireguard_private_key_raw
+  no_log: true
+
+- name: Read WireGuard public key
+  slurp:
+    src: "{{ wireguard_public_key_file }}"
+  register: wireguard_public_key_raw
+  no_log: true
+
+- name: Store WireGuard keys
+  set_fact:
+    wireguard_private_key: "{{ wireguard_private_key_raw.content | b64decode | trim }}"
+    wireguard_public_key: "{{ wireguard_public_key_raw.content | b64decode | trim }}"
+  no_log: true
+
+- name: Enable IPv4 forwarding for WireGuard
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    state: present
+    reload: true
+  when: wireguard_enable_ip_forwarding
+
+- name: Enable IPv6 forwarding for WireGuard
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: 1
+    state: present
+    reload: true
+  when: wireguard_enable_ip_forwarding
+
+- name: Render WireGuard configuration
+  template:
+    src: wg0.conf.j2
+    dest: "{{ wireguard_config_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: restart wireguard
+
+- name: Ensure WireGuard service is enabled and started
+  systemd:
+    name: "wg-quick@{{ wireguard_interface }}"
+    enabled: true
+    state: started

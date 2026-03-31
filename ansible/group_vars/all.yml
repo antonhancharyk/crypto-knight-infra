@@ -8,6 +8,9 @@ allowed_ports:
   - 80
   - 443
 
+allowed_udp_ports:
+  - 51820
+
 docker_log_max_size: "50m"
 docker_log_max_file: "5"
 

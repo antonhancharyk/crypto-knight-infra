@@ -2,3 +2,7 @@ ansible_user: ansible
 ansible_become: true
 ansible_become_method: sudo
 deploy_user: deploy
+
+wireguard_port: 51820
+wireguard_network: 10.10.0.0/24
+wireguard_netmask: 24

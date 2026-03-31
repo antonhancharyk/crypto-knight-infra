@@ -1,0 +1,2 @@
+ansible_host: 193.168.173.51
+wireguard_address: 10.10.0.1

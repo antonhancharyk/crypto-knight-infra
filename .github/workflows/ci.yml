@@ -17,9 +17,9 @@ on:
         description: "Role"
         type: choice
         options:
-          - bot
-          - app
-          - infra
+          - bot0
+          - app0
+          - infra0
       bootstrap:
         description: "Run bootstrap playbook"
         type: boolean
@@ -32,14 +32,14 @@ jobs:
       - name: Select server
         run: |
           case "${{ github.event.inputs.role }}" in
-            bot)
-              echo "HOST=193.168.173.51" >> $GITHUB_ENV
+            bot0)
+              echo "HOST=185.247.117.229" >> $GITHUB_ENV
               ;;
-            app)
-              echo "HOST=103.45.247.73" >> $GITHUB_ENV
+            app0)
+              echo "HOST=185.220.205.55" >> $GITHUB_ENV
               ;;
-            infra)
-              echo "HOST=5.180.182.201" >> $GITHUB_ENV
+            infra0)
+              echo "HOST=5.180.182.41" >> $GITHUB_ENV
               ;;
             *)
               echo "Unknown role"
@@ -90,7 +90,7 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keygen -y -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub
-          for host in 193.168.173.51 103.45.247.73 5.180.182.201; do
+          for host in 185.247.117.229 185.220.205.55 5.180.182.41; do
             ssh-keyscan -H "$host" >> ~/.ssh/known_hosts
           done
       ############################################################
@@ -110,6 +110,7 @@ jobs:
         run: |
           cd ansible
           ansible -i inventory.ini servers -m ping
+          
       - name: Run Main Playbook
         if: ${{ github.event.inputs.service == 'ansible' }}
         run: |

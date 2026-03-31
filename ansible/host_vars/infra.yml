@@ -1,2 +1,2 @@
-ansible_host: 5.180.182.201
+ansible_host: 5.180.182.41
 wireguard_address: 10.10.0.3

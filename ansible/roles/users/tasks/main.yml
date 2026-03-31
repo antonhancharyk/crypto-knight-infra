@@ -15,7 +15,7 @@
 - name: Add SSH key for deploy user
   authorized_key:
     user: "{{ deploy_user }}"
-    key: "{{ ansible_ssh_public_key_file }}"
+    key: "{{ ansible_ssh_public_key }}"
 
 - name: Ensure authorized_keys permissions
   file:

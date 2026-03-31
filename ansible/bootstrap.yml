@@ -20,7 +20,7 @@
     - name: Add SSH key
       authorized_key:
         user: "{{ admin_user }}"
-        key: "{{ ansible_ssh_public_key_file }}"
+        key: "{{ ansible_ssh_public_key }}"
 
     - name: Ensure authorized_keys permissions
       file:

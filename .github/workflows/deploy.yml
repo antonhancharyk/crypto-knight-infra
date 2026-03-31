@@ -13,13 +13,6 @@ on:
           - rabbitmq
           - observability
           - ansible
-      role:
-        description: "Role"
-        type: choice
-        options:
-          - bot0
-          - app0
-          - infra0
       bootstrap:
         description: "Run bootstrap playbook"
         type: boolean
@@ -29,23 +22,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Select server
-        run: |
-          case "${{ github.event.inputs.role }}" in
-            bot0)
-              echo "HOST=185.247.117.229" >> $GITHUB_ENV
-              ;;
-            app0)
-              echo "HOST=185.220.205.55" >> $GITHUB_ENV
-              ;;
-            infra0)
-              echo "HOST=5.180.182.41" >> $GITHUB_ENV
-              ;;
-            *)
-              echo "Unknown role"
-              exit 1
-              ;;
-          esac
       ############################################################
       # NORMAL DOCKER DEPLOY
       ############################################################
@@ -56,7 +32,7 @@ jobs:
         if: ${{ github.event.inputs.service != 'ansible' }}
         uses: appleboy/scp-action@master
         with:
-          host: ${{ env.HOST }}
+          host: 5.180.182.41
           username: deploy
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "./${{ github.event.inputs.service }}"
@@ -66,7 +42,7 @@ jobs:
         if: ${{ github.event.inputs.service != 'ansible' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ env.HOST }}
+          host: 5.180.182.41
           username: deploy
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
@@ -87,7 +63,7 @@ jobs:
         if: ${{ github.event.inputs.service == 'ansible' }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keygen -y -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub
           for host in 185.247.117.229 185.220.205.55 5.180.182.41; do
@@ -100,7 +76,7 @@ jobs:
         if: ${{ github.event.inputs.service == 'ansible' && github.event.inputs.bootstrap == 'true' }}
         run: |
           cd ansible
-          ansible -i inventory_bootstrap.ini bootstrap -m ping
+          ansible -i inventory_bootstrap.ini all -m ping
           ansible-playbook -i inventory_bootstrap.ini bootstrap.yml
       ############################################################
       # MAIN PLAYBOOK (ansible user)
